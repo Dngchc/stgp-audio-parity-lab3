@@ -1,0 +1,24 @@
+ARG registry=docker.io
+FROM ubuntu:20.04
+
+RUN apt-get update && apt-get install -y python3-pip python3-numpy python3 sudo
+RUN pip3 install --upgrade pip
+RUN sudo apt install -y sox
+RUN apt-get update && apt-get install -y nano
+
+COPY hide_message.py /home/ubuntu/hide_message.py
+COPY extract_message.py /home/ubuntu/extract_message.py
+COPY check_file_wav.py /home/ubuntu/check_file_wav.py
+
+RUN chmod 755 /home/ubuntu/hide_message.py
+RUN chmod 755 /home/ubuntu/check_file_wav.py
+RUN chmod 777 /home/ubuntu/extract_message.py
+
+RUN useradd -m -s /bin/bash ubuntu && echo "ubuntu:ubuntu" | chpasswd && usermod -aG sudo ubuntu
+
+RUN chown -R ubuntu:ubuntu /home/ubuntu
+
+USER ubuntu
+WORKDIR /home/ubuntu
+
+CMD ["/bin/bash"]
