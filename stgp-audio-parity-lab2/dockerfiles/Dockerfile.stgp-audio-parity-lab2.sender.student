@@ -1,0 +1,50 @@
+ARG registry
+FROM $registry/labtainer.base2
+
+ARG lab
+ARG labdir
+ARG imagedir
+ARG user_name
+ARG password
+ARG apt_source
+ARG version
+LABEL version=$version
+ENV APT_SOURCE $apt_source
+
+RUN /usr/bin/apt-source.sh && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-numpy \
+        sox \
+        ffmpeg \
+        netcat && \
+    apt-get install -y openssh-server && \    
+    pip3 install --upgrade pip && \
+    pip3 install pydub && \
+    mkdir -p /var/run/sshd
+
+
+RUN useradd -ms /bin/bash $user_name && \
+    echo "$user_name:$password" | chpasswd && \
+    adduser $user_name sudo
+
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+
+EXPOSE 22
+
+ADD $labdir/$imagedir/sys_tar/sys.tar /
+ADD $labdir/sys_$lab.tar.gz /
+
+USER $user_name
+ENV HOME /home/$user_name
+ADD $labdir/$imagedir/home_tar/home.tar $HOME
+RUN rm -f $HOME/home.tar
+ADD $labdir/$lab.tar.gz $HOME
+
+USER root
+CMD ["/bin/bash", "-c", "/usr/sbin/sshd; exec /sbin/init --log-target=journal 3>&1"]
+

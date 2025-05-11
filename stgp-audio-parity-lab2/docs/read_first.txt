@@ -1,0 +1,5 @@
+The lab manual is at 
+   file://LAB_DOCS/stgp-audio-parity-lab2.pdf
+
+You may open these by right clicking
+and select "Open Link".
